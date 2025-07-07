@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 from langchain_openai import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -10,26 +11,33 @@ from langchain_core.documents import Document
 
 load_dotenv()
 
+# Environment configs
 EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL')
 OPENROUTER_API_KEY = os.getenv('API_KEY')
 MODEL = os.getenv('MODEL_NAME')
 OPENROUTER_URL = os.getenv('BASE_URL')
 
-FILE_PATH = "D:/langchain/irctc__chatbot/data/policies"
-INDEX_PATH = "D:/langchain/irctc__chatbot/data/faiss_index"
-
+# Use relative paths for cloud compatibility
+BASE_DIR = Path(__file__).resolve().parent
+FILE_PATH = BASE_DIR / "data" / "policies"
+INDEX_PATH = BASE_DIR / "data" / "faiss_index"
 
 def extract_documents_from_folder(folder_path):
     all_docs = []
+
+    if not os.path.exists(folder_path):
+        raise FileNotFoundError(f"Folder not found: {folder_path}")
+
     for filename in os.listdir(folder_path):
         if filename.endswith(".pdf"):
             pdf_path = os.path.join(folder_path, filename)
             elements = partition_pdf(filename=pdf_path, strategy="auto", infer_table_structure=True)
-
             content = "\n".join(str(e) for e in elements if e.text)
             document = Document(page_content=content, metadata={"source": filename})
             all_docs.append(document)
+
     return all_docs
+
 
 
 def split_documents_to_chunks(documents):
@@ -54,11 +62,6 @@ def create_or_load_vectorstore():
         print("Creating new FAISS index...")
         raw_docs = extract_documents_from_folder(FILE_PATH)
         split_docs = split_documents_to_chunks(raw_docs)
-
-        print("\n📄 Sample Chunks:")
-        for i, chunk in enumerate(split_docs[:30]):
-            print(f"\n--- Chunk {i + 1} ---\n{chunk.page_content}")
-
         vectorstore = FAISS.from_documents(split_docs, embedding=embeddings)
         vectorstore.save_local(INDEX_PATH)
         return vectorstore
