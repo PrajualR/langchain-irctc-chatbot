@@ -12,4 +12,5 @@ sentence-transformers
 faiss-cpu
 pdfminer.six
 unstructured[local-inference]
+unstructured[pdf,pytesseract,all-docs]
 python-magic
