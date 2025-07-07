@@ -1,0 +1,14 @@
+streamlit
+python-dotenv
+pypdf
+openai
+langchain
+langchain-openai
+langchain-core
+langchain-community
+langchain-huggingface
+sentence-transformers
+faiss-cpu
+pdfminer.six
+unstructured[local-inference]
+python-magic
